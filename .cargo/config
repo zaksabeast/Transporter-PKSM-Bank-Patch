@@ -1,0 +1,6 @@
+[build]
+target = "arm-unknown-linux-gnueabi"
+
+[target.arm-unknown-linux-gnueabi]
+linker = "/opt/devkitpro/devkitARM/bin/arm-none-eabi-gcc"
+ar = "/opt/devkitpro/devkitARM/bin/arm-none-eabi-ar"
