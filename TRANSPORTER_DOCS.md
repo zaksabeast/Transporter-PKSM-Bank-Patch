@@ -237,25 +237,26 @@ int main() {
 
 These are the different states the overall app has. There are 19 total states, and there are 12 that are known:
 
-| State name                        | Value | Description                                                                                                     |
-| --------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------- |
-| GAME_LOAD                         | 0x0   | This is only run when the game first starts and presumably sets things up for the app                           |
-| HOME_MENU                         | 0x2   | This renders the home menu and waits for the user to press a button input                                       |
-| CONNECT_ONLINE                    | 0x3   | This occurs after a user selects a game, and begins connecting to Nintendo's servers                            |
-| TRANSFER_POKEMON                  | 0x6   | When a user is prompted to transfer Pokemon, this runs if the user accepts                                      |
-| SHOW_GAMES                        | 0x8   | This shows a list of games the user can transport from                                                          |
-| READ_POKEMON_FROM_GAME            | 0x9   | This reads Pokemon from the game the user selected, and sends Pokemon to a remote server for legality checking. |
-| CONVERT_POKEMON_TO_EK7            | 0xA   | This converts Pokemon to EK7                                                                                    |
-| CHECK_IF_USER_CAN_TRANSFER        | 0xB   | Checks if the user has Pokemon in their Bank's Transport box (and possibly other checks)                        |
-| ASK_TO_TRANSFER                   | 0xC   | Asks if the user if they want to transfer their Pokemon                                                         |
-| CLEANUP_PREVIOUS_EARLY_DISCONNECT | 0xE   | This runs on the next Transporter use if there was a problem communicating with Bank on the previous use.       |
-| NO_TRANSFER                       | 0xF   | This runs any time Transporter ends a session without transferring Pokemon.                                     |
-| DISCONNECT_ONLINE                 | 0x10  | Disconnects from online services                                                                                |
+| State name                        | Value | Description                                                                                              |
+| --------------------------------- | ----- | -------------------------------------------------------------------------------------------------------- |
+| GAME_LOAD                         | 0x0   | This is only run when the game first starts and presumably sets things up for the app                    |
+| SELECT_LANGUAGE                   | 0x1   | Shows the language selection menu                                                                        |
+| HOME_MENU                         | 0x2   | This renders the home menu and waits for the user to press a button input                                |
+| CONNECT_ONLINE                    | 0x3   | This occurs after a user selects a game, and begins connecting to Nintendo's servers                     |
+| TRANSFER_POKEMON                  | 0x6   | When a user is prompted to transfer Pokemon, this runs if the user accepts                               |
+| SHOW_GAMES                        | 0x8   | This shows a list of games the user can transport from                                                   |
+| GET_POKEMON                       | 0x9   | This handles reading Pokemon, legality checking, and converting to EKX                                   |
+| CHECK_IF_USER_CAN_TRANSFER        | 0xB   | Checks if the user has Pokemon in their Bank's Transport box (and possibly other checks)                 |
+| ASK_TO_TRANSFER                   | 0xC   | Asks if the user if they want to transfer their Pokemon                                                  |
+| CLEANUP_PREVIOUS_EARLY_DISCONNECT | 0xE   | This runs on the next Transporter use if there was a problem communicating with Bank on the previous use |
+| NO_TRANSFER                       | 0xF   | This runs any time Transporter ends a session without transferring Pokemon                               |
+| DISCONNECT_ONLINE                 | 0x10  | Disconnects from online services                                                                         |
+| SAVE_SETTINGS                     | 0x11  | Saves the Transporter language selection, and possibly other things                                      |
 
 A healthy flow is:
 
 ```
-HOME_MENU -> 0x7 -> SHOW_GAMES -> CONNECT_ONLINE -> 0x5 -> READ_POKEMON_FROM_GAMES -> CONVERT_POKEMON_TO_EK7 -> 0xD -> CHECK_IF_USER_CAN_TRANSFER -> ASK_TO_TRANSFER -> TRANSFER_POKEMON -> DISCONNECT_ONLINE -> HOME_MENU
+HOME_MENU -> 0x7 -> SHOW_GAMES -> CONNECT_ONLINE -> 0x5 -> GET_POKEMON -> 0xA -> 0xD -> CHECK_IF_USER_CAN_TRANSFER -> ASK_TO_TRANSFER -> TRANSFER_POKEMON -> DISCONNECT_ONLINE -> HOME_MENU
 ```
 
 Transporter always starts and ends on the home menu.
@@ -367,7 +368,7 @@ The jump table of handle_overall_app_state is located at .text + 0x19cf00 and ha
 | Case #    | State Name                        | Offset           | Jump offset      |
 | --------- | --------------------------------- | ---------------- | ---------------- |
 | case 0x0  | GAME_LOAD                         | .text + 0x19cf00 | .text + 0x19cf4c |
-| case 0x1  | _unnamed_                         | .text + 0x19cf04 | .text + 0x19cf8c |
+| case 0x1  | SELECT_LANGUAGE                   | .text + 0x19cf04 | .text + 0x19cf8c |
 | case 0x2  | HOME_MENU                         | .text + 0x19cf08 | .text + 0x19cfd4 |
 | case 0x3  | CONNECT_ONLINE                    | .text + 0x19cf0c | .text + 0x19d020 |
 | case 0x4  | _unnamed_                         | .text + 0x19cf10 | .text + 0x19d104 |
@@ -375,15 +376,15 @@ The jump table of handle_overall_app_state is located at .text + 0x19cf00 and ha
 | case 0x6  | TRANSFER_POKEMON                  | .text + 0x19cf18 | .text + 0x19d1a4 |
 | case 0x7  | _unnamed_                         | .text + 0x19cf1c | .text + 0x19d1fc |
 | case 0x8  | SHOW_GAMES                        | .text + 0x19cf20 | .text + 0x19d23c |
-| case 0x9  | READ_POKEMON_FROM_GAME            | .text + 0x19cf24 | .text + 0x19d2c8 |
-| case 0xA  | CONVERT_POKEMON_TO_EK7            | .text + 0x19cf28 | .text + 0x19d310 |
+| case 0x9  | GET_POKEMON                       | .text + 0x19cf24 | .text + 0x19d2c8 |
+| case 0xA  | _unnamed_                         | .text + 0x19cf28 | .text + 0x19d310 |
 | case 0xB  | CHECK_IF_USER_CAN_TRANSFER        | .text + 0x19cf2c | .text + 0x19d360 |
 | case 0xC  | ASK_TO_TRANSFER                   | .text + 0x19cf30 | .text + 0x19d3b4 |
 | case 0xD  | _unnamed_                         | .text + 0x19cf34 | .text + 0x19d408 |
 | case 0xE  | CLEANUP_PREVIOUS_EARLY_DISCONNECT | .text + 0x19cf38 | .text + 0x19d45c |
 | case 0xF  | NO_TRANSFER                       | .text + 0x19cf3c | .text + 0x19d4fc |
 | case 0x10 | DISCONNECT_ONLINE                 | .text + 0x19cf40 | .text + 0x19d068 |
-| case 0x11 | _unnamed_                         | .text + 0x19cf44 | .text + 0x19d0b0 |
+| case 0x11 | SAVE_SETTINGS                     | .text + 0x19cf44 | .text + 0x19d0b0 |
 | case 0x12 | _unnamed_                         | .text + 0x19cf48 | .text + 0x19d4bc |
 
 The jump table of get_next_state is located at .text + 0x242bcc and has these jumps:
@@ -391,7 +392,7 @@ The jump table of get_next_state is located at .text + 0x242bcc and has these ju
 | Case #    | State Name                        | Offset           | Jump offset      |
 | --------- | --------------------------------- | ---------------- | ---------------- |
 | case 0x0  | GAME_LOAD                         | .text + 0x242bcc | .text + 0x242c18 |
-| case 0x1  | _unnamed_                         | .text + 0x242bd0 | .text + 0x242c2c |
+| case 0x1  | SELECT_LANGUAGE                   | .text + 0x242bd0 | .text + 0x242c2c |
 | case 0x2  | HOME_MENU                         | .text + 0x242bd4 | .text + 0x242c50 |
 | case 0x3  | CONNECT_ONLINE                    | .text + 0x242bd8 | .text + 0x242c90 |
 | case 0x4  | _unnamed_                         | .text + 0x242bdc | .text + 0x242cb4 |
@@ -399,15 +400,15 @@ The jump table of get_next_state is located at .text + 0x242bcc and has these ju
 | case 0x6  | TRANSFER_POKEMON                  | .text + 0x242be4 | .text + 0x242cdc |
 | case 0x7  | _unnamed_                         | .text + 0x242be8 | .text + 0x242cf4 |
 | case 0x8  | SHOW_GAMES                        | .text + 0x242bec | .text + 0x242d0c |
-| case 0x9  | READ_POKEMON_FROM_GAME            | .text + 0x242bf0 | .text + 0x242d28 |
-| case 0xA  | CONVERT_POKEMON_TO_EK7            | .text + 0x242bf4 | .text + 0x242d40 |
+| case 0x9  | GET_POKEMON                       | .text + 0x242bf0 | .text + 0x242d28 |
+| case 0xA  | _unnamed_                         | .text + 0x242bf4 | .text + 0x242d40 |
 | case 0xB  | CHECK_IF_USER_CAN_TRANSFER        | .text + 0x242bf8 | .text + 0x242d68 |
 | case 0xC  | ASK_TO_TRANSFER                   | .text + 0x242bfc | .text + 0x242d90 |
 | case 0xD  | _unnamed_                         | .text + 0x242c00 | .text + 0x242dac |
 | case 0xE  | CLEANUP_PREVIOUS_EARLY_DISCONNECT | .text + 0x242c04 | .text + 0x242dd0 |
 | case 0xF  | NO_TRANSFER                       | .text + 0x242c08 | .text + 0x242df0 |
 | case 0x10 | DISCONNECT_ONLINE                 | .text + 0x242c0c | .text + 0x242e00 |
-| case 0x11 | _unnamed_                         | .text + 0x242c10 | .text + 0x242e00 |
+| case 0x11 | SAVE_SETTINGS                     | .text + 0x242c10 | .text + 0x242e00 |
 | case 0x12 | _unnamed_                         | .text + 0x242c14 | .text + 0x242df0 |
 
 An easy way to patch `get_next_state` is with this assembly:
