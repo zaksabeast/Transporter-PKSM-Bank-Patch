@@ -15,11 +15,9 @@ const EK7_SIZE: u32 = 232;
 const EXK_PER_BOX: u8 = 30;
 const TRANSPORTER_EXK_OFFSET: u32 = 0x8BC6524;
 const TRANSPORTER_TRANSFER_SLOT_LIST_OFFSET: u32 = 0x8AFD380;
-// This holds the size of data for Gen 1/2 or 5
-// however Transporter uses it often to check which gen it's dealing with
-const TRANSPORTER_GAME_CHECK_OFFSET: u32 = 0x81bf79e;
-const GEN_1_2_GAME_CODE: u32 = 0x800;
-// const GEN_5_GAME_CODE: u32 = 0x600; // Added for documentation, but commented out to make the linter happy
+const TRANSPORTER_GAME_CHECK_OFFSET: u32 = 0x8B0273C;
+const GEN_1_2_GAME_CODE: u32 = 2;
+// const GEN_5_GAME_CODE: u32 = 0; // Added for documentation, but commented out to make the linter happy
 
 pub struct Bank {
   file: super::game_fs::File,
